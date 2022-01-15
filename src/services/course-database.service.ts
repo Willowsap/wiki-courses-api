@@ -3,6 +3,7 @@ import Course, { ClientCourse, ICourse } from "../models/course.model";
 import path from "path";
 import { LinkedFileList, FileData } from "./linked-file-list.service";
 import { ClientTopic } from "../models/client-topic.model";
+import fs, { fstat } from "fs";
 
 export default class CourseDatabaseService {
   private repoFolder = path.resolve(__dirname, "../../db");
@@ -30,7 +31,12 @@ export default class CourseDatabaseService {
   }
 
   rebuildTopicList(folder: string) {
-    this.dbLists[folder] = LinkedFileList.constructFromFolder(folder);
+    if (!fs.existsSync(folder)) {
+      return false;
+    } else {
+      this.dbLists[folder] = LinkedFileList.constructFromFolder(folder);
+      return true;
+    }
   }
 
   async createCourse({
@@ -136,11 +142,21 @@ export default class CourseDatabaseService {
     courseRepo: string;
   }): ClientCourse {
     if (!this.dbLists[courseRepo]) {
-      this.rebuildTopicList(courseRepo);
+      const r = this.rebuildTopicList(courseRepo);
+      if (!r) {
+        return {
+          title: "error",
+          description: "error"
+        }
+      }
     }
     const result = this.dbLists[courseRepo].getFile(this.initialFile);
+    console.log(result)
     if (result === null) {
-      throw new Error("could not find course description");
+      return {
+        title: "error",
+        description: "error"
+      }
     } else {
       return {
         title: courseTitle,

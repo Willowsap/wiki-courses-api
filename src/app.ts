@@ -22,7 +22,7 @@ mongoose
     console.log("failed to connect to database");
   });
 
-const app: Application = express();
+const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
