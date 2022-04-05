@@ -80,15 +80,27 @@ export default class GitService {
   public static revertCourse = async ({
     repo,
     oid,
+    message
   }: {
     repo: string;
     oid: string;
+    message: string;
   }): Promise<boolean> => {
     await git.checkout({
       fs,
       dir: repo,
       ref: oid
     });
+    fs.writeFile(repo + `/.git/refs/heads/master`, oid, (err) => {
+        // clear the index (if any)
+        fs.unlink(repo + '/.git/index', (err2) => {
+          // checkout the branch into the working tree
+          git.checkout({ dir: repo, fs, ref: "master" })
+            .then(() => {
+              // Done! (in theory, haven't tested it)
+            });
+        })
+      });
     return true;
   };
 

@@ -1,4 +1,4 @@
-import Course, { ICourse } from "../models/course.model";
+import Course, { ClientCourse, ICourse } from "../models/course.model";
 import { NextFunction, Request, Response } from "express";
 import CourseDatabaseService from "../services/course-database.service";
 import GitService from "../services/git.service";
@@ -47,14 +47,21 @@ export default class CourseController {
         }
       })
       .then((count) => {
+        const c: Array<ClientCourse> = [];
+        for(let i = 0; i < fetchedCourses.length; i++) {
+          const d = this.courseDatabaseService.getCourseByRepo({
+            courseTitle: fetchedCourses[i].title,
+            courseRepo: fetchedCourses[i].repo
+          });
+          if (d.title === "error") {
+            count--;
+          } else {
+            c.push(d);
+          }
+        }
         res.status(200).json({
           message: "Courses successfully fetched",
-          courses: fetchedCourses.map((course) => {
-            return this.courseDatabaseService.getCourseByRepo({
-              courseTitle: course.title,
-              courseRepo: course.repo,
-            });
-          }),
+          courses: c,
           maxCourses: count,
         });
       })
@@ -69,6 +76,7 @@ export default class CourseController {
    *    courseTitle
    */
   getCourse = (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.params.courseTitle);
     this.courseDatabaseService
       .getCourse({ courseTitle: req.params.courseTitle as string })
       .then((course) => {
@@ -177,6 +185,9 @@ export default class CourseController {
    *    newCourseTitle
    */
   updateCourseTitle = (req: Request, res: Response, next: NextFunction) => {
+    console.log("updating course title")
+    console.log(req.params.courseTitle);
+    console.log(req.body.newCourseTitle);
     if (!req.body.newCourseTitle) {
       res.status(400).json({ message: "requires new course title" });
     } else {
@@ -366,11 +377,13 @@ export default class CourseController {
    *
    * Expects body with:
    *    oid
+   *    message
    */
   revertCourse = (req: Request, res: Response, next: NextFunction) => {
     this.courseDatabaseService.revertCourse({
       courseTitle: req.params.courseTitle,
-      oid: req.body.oid
+      oid: req.body.oid,
+      message: req.body.message
     }).then(result => {
       if (result) {
         res.status(200).json({message: "successfully reverted"});
