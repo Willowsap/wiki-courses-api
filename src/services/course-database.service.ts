@@ -359,16 +359,18 @@ export default class CourseDatabaseService {
 
   async revertCourse({
     courseTitle,
-    oid
+    oid,
+    message
   }: {
     courseTitle: string,
-    oid: string
+    oid: string,
+    message: string
   }) {
     const course = await Course.findOne({ title: courseTitle });
     if (!course) {
       throw new Error("could not find course");
     } else {
-      const success = await GitService.revertCourse({repo: course.repo, oid});
+      const success = await GitService.revertCourse({repo: course.repo, oid, message});
       if (success) {
         this.rebuildTopicList(course.repo);
         return true;

@@ -377,11 +377,13 @@ export default class CourseController {
    *
    * Expects body with:
    *    oid
+   *    message
    */
   revertCourse = (req: Request, res: Response, next: NextFunction) => {
     this.courseDatabaseService.revertCourse({
       courseTitle: req.params.courseTitle,
-      oid: req.body.oid
+      oid: req.body.oid,
+      message: req.body.message
     }).then(result => {
       if (result) {
         res.status(200).json({message: "successfully reverted"});
